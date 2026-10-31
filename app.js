@@ -66,7 +66,8 @@ auth.onAuthStateChanged(async (user) => {
     currentUserData = {
       name: doc.exists ? (doc.data().name || user.email) : (user.displayName || user.email),
       email: user.email,
-      authCode: code
+      authCode: code,
+      date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
     };
     document.getElementById('authCodeDisplay').textContent = code;
     renderPreview();
@@ -115,105 +116,178 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
 function logout() { auth.signOut(); showToast('👋 Logged out'); }
 window.logout = logout;
 
-/* ================= BADGE DRAW ================= */
-function drawBadge(canvas, name, code, email) {
-  const W = 600, H = 360;
+/* ================= IMAGE LOADER (For Canvas) ================= */
+function loadImage(src) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null); // Agar image na mile toh null dega
+    img.src = src;
+  });
+}
+
+/* ================= BADGE DRAW (White Certificate Theme) ================= */
+async function drawBadge(canvas, name, code, email, date) {
+  const W = 800, H = 600; // Thoda bada size taaki text aur images clear dikhe
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
 
-  const g = ctx.createLinearGradient(0, 0, W, H);
-  g.addColorStop(0, '#0a0e1a'); g.addColorStop(1, '#111827');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // 1. Background (Solid White)
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
 
-  const bar = ctx.createLinearGradient(0, 0, W, 0);
-  bar.addColorStop(0, '#00e5ff'); bar.addColorStop(0.5, '#00bcd4'); bar.addColorStop(1, '#00e5ff');
-  ctx.fillStyle = bar; ctx.fillRect(0, 0, W, 6); ctx.fillRect(0, H - 6, W, 6);
+  // 2. Border (Cyan & Gold style)
+  ctx.strokeStyle = '#00bcd4'; 
+  ctx.lineWidth = 8;
+  ctx.strokeRect(15, 15, W - 30, H - 30);
+  
+  ctx.strokeStyle = '#0f1a2b'; 
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(28, 28, W - 56, H - 56);
 
-  ctx.strokeStyle = 'rgba(0,229,255,0.35)'; ctx.lineWidth = 1.5;
-  ctx.strokeRect(10, 10, W - 20, H - 20);
-
+  // 3. Watermark (Faint RDX text)
   ctx.save();
-  ctx.translate(W/2, H/2); ctx.rotate(-0.25);
-  ctx.font = '900 160px Segoe UI, sans-serif';
-  ctx.fillStyle = 'rgba(0,229,255,0.04)';
+  ctx.translate(W/2, H/2); ctx.rotate(-0.2);
+  ctx.font = '900 200px Segoe UI, sans-serif';
+  ctx.fillStyle = 'rgba(0, 188, 212, 0.04)';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText('RDX', 0, 0);
   ctx.restore();
 
-  const cx = W/2, cy = 62, r = 28;
-  const lg = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
-  lg.addColorStop(0, '#00e5ff'); lg.addColorStop(1, '#008fa8');
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = lg; ctx.fill();
-  ctx.font = '900 20px Segoe UI, sans-serif'; ctx.fillStyle = '#fff';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('RDX', cx, cy + 1);
+  // Load Images
+  const logoImg = await loadImage('logo.png');
+  const signImg = await loadImage('sign.png');
+  const stampImg = await loadImage('stamp.png');
 
-  ctx.font = '900 18px Segoe UI, sans-serif'; ctx.fillStyle = '#00e5ff';
-  ctx.fillText('RDX · VERIFIED', W/2, 108);
+  // 4. Header - Logo Image
+  if (logoImg) {
+    ctx.drawImage(logoImg, W/2 - 40, 50, 80, 80);
+  } else {
+    // Fallback if logo missing
+    ctx.beginPath(); ctx.arc(W/2, 90, 40, 0, Math.PI*2); 
+    ctx.fillStyle = '#00bcd4'; ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 24px sans-serif'; 
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('RDX', W/2, 90);
+  }
 
-  const yy = 145;
-  ctx.beginPath(); ctx.arc(W/2, yy, 20, 0, Math.PI * 2);
-  ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 2.5; ctx.stroke();
-  ctx.fillStyle = 'rgba(0,229,255,0.1)'; ctx.fill();
-  ctx.lineWidth = 3; ctx.lineCap = 'round';
+  // Title
+  ctx.fillStyle = '#0f1a2b';
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 28px Times New Roman, serif';
+  ctx.fillText('CERTIFICATE OF VERIFIED OWNERSHIP', W/2, 165);
+
+  ctx.fillStyle = '#00bcd4';
+  ctx.font = 'bold 12px Arial, sans-serif';
+  ctx.fillText('OFFICIAL RDX ECOSYSTEM LICENSE', W/2, 185);
+
+  // 5. Certificate ID (Top Right)
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#64748b';
+  ctx.font = '11px Courier New, monospace';
+  ctx.fillText('CERTIFICATE ID: ' + code, W - 50, 60);
+  ctx.fillText('DATE OF ISSUE: ' + date, W - 50, 75);
+
+  // 6. Main Content Text
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#334155';
+  ctx.font = '16px Arial, sans-serif';
+  ctx.fillText('This official document certifies that', W/2, 230);
+
+  // Name
+  ctx.fillStyle = '#0f1a2b';
+  ctx.font = 'bold 36px Times New Roman, serif';
+  ctx.fillText(name, W/2, 275);
+
+  // Line under name
+  const nameWidth = ctx.measureText(name).width;
   ctx.beginPath();
-  ctx.moveTo(W/2 - 9, yy); ctx.lineTo(W/2 - 3, yy + 6); ctx.lineTo(W/2 + 9, yy - 7);
+  ctx.moveTo(W/2 - nameWidth/2 - 20, 285);
+  ctx.lineTo(W/2 + nameWidth/2 + 20, 285);
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.lineWidth = 1;
   ctx.stroke();
 
-  ctx.font = '800 20px Segoe UI, sans-serif'; ctx.fillStyle = '#fff';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  let n = name || 'RDX Member';
-  if (n.length > 28) n = n.slice(0, 26) + '…';
-  ctx.fillText(n, W/2, 195);
+  // Subtext
+  ctx.fillStyle = '#334155';
+  ctx.font = '16px Arial, sans-serif';
+  ctx.fillText('has successfully verified their identity and is an absolute,', W/2, 315);
+  ctx.fillText('authorized member of the RDX global network.', W/2, 335);
 
-  ctx.font = '500 11px Segoe UI, sans-serif'; ctx.fillStyle = '#64748b';
-  ctx.fillText((email || '').slice(0, 44), W/2, 212);
+  // Domain Highlight
+  ctx.fillStyle = '#007a8a';
+  ctx.font = 'bold 22px Courier New, monospace';
+  ctx.fillText('rdx.is-a.dev', W/2, 375);
 
-  ctx.font = '700 9px Segoe UI, sans-serif'; ctx.fillStyle = '#64748b';
-  ctx.fillText('UNIQUE RDX ID', W/2, 240);
+  // 7. Terms (Small text at bottom)
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '10px Arial, sans-serif';
+  ctx.fillText('TERMS & CONDITIONS:', 60, 420);
+  ctx.fillText('1. This badge is digital proof of association with RDX. It does not grant legal ownership of the domain.', 60, 435);
+  ctx.fillText('2. The Unique ID printed above is strictly linked to the user account. Misuse or forging is prohibited.', 60, 450);
+  ctx.fillText('3. The user agrees to promote the RDX brand positively. The badge must link back to rdx.is-a.dev.', 60, 465);
 
-  const iw = 230, ih = 44, ix = (W - iw)/2, iy = 248;
-  ctx.fillStyle = 'rgba(0,229,255,0.08)'; ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 1.5;
-  ctx.setLineDash([5, 4]);
-  roundRect(ctx, ix, iy, iw, ih, 8); ctx.fill(); ctx.stroke();
-  ctx.setLineDash([]);
-
-  ctx.font = '800 20px Courier New, monospace'; ctx.fillStyle = '#00e5ff';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(code, W/2, iy + ih/2 + 1);
-
-  ctx.font = '600 10px Segoe UI, sans-serif'; ctx.fillStyle = '#475569';
-  ctx.textBaseline = 'alphabetic';
-  ctx.fillText('Verified by RDX · rdx.is-a.dev', W/2, H - 22);
-}
-
-function roundRect(ctx, x, y, w, h, r) {
+  // 8. Footer Section (Sign & Stamp)
+  // Signature (Left)
+  if (signImg) {
+    ctx.drawImage(signImg, 120, 480, 140, 50); // adjust x, y, width, height as needed
+  }
   ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
+  ctx.moveTo(100, 540); ctx.lineTo(280, 540);
+  ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#64748b'; ctx.font = 'bold 11px Arial, sans-serif';
+  ctx.fillText('AUTHORIZED SIGNATORY', 190, 555);
+
+  // Stamp (Right)
+  if (stampImg) {
+    ctx.drawImage(stampImg, W - 260, 460, 120, 120); // adjust x, y, width, height as needed
+  }
+  ctx.beginPath();
+  ctx.moveTo(W - 280, 540); ctx.lineTo(W - 100, 540);
+  ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = '#64748b'; ctx.font = 'bold 11px Arial, sans-serif';
+  ctx.fillText('OFFICIAL SEAL', W - 190, 555);
+
+  // Very Bottom Text
+  ctx.fillStyle = '#cbd5e1';
+  ctx.font = '9px Courier New, monospace';
+  ctx.fillText('VERIFIED BY RDX SYSTEM · ' + code, W/2, 580);
 }
 
-function renderPreview() {
+/* ================= PREVIEW RENDERER ================= */
+async function renderPreview() {
   if (!currentUserData) return;
   const holder = document.getElementById('previewCanvasHolder');
-  holder.innerHTML = '';
+  holder.innerHTML = '<div style="color:#94a3b8;font-size:12px;">Loading preview...</div>';
+  
   const c = document.createElement('canvas');
   c.style.maxWidth = '100%';
-  drawBadge(c, currentUserData.name, currentUserData.authCode, currentUserData.email);
+  c.style.height = 'auto';
+  c.style.borderRadius = '8px';
+  c.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+  
+  // Await drawing images
+  await drawBadge(c, currentUserData.name, currentUserData.authCode, currentUserData.email, currentUserData.date);
+  
+  holder.innerHTML = '';
   holder.appendChild(c);
 }
 
 /* ================= FORMAT BUTTONS ================= */
 document.querySelectorAll('.format-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', async () => {
     if (!currentUserData) return showToast('⚠️ Please login first');
     const fmt = btn.dataset.format;
-    if (fmt === 'png') downloadPNG();
-    else if (fmt === 'pdf') downloadPDF();
+    
+    // Create a high-res canvas for downloading
+    const c = document.createElement('canvas');
+    await drawBadge(c, currentUserData.name, currentUserData.authCode, currentUserData.email, currentUserData.date);
+    
+    if (fmt === 'png') downloadPNG(c);
+    else if (fmt === 'pdf') downloadPDF(c);
     else if (fmt === 'html') downloadHTML();
     else if (fmt === 'svg') downloadSVG();
   });
@@ -227,78 +301,74 @@ function triggerDownload(url, filename) {
 }
 
 /* ---- PNG ---- */
-function downloadPNG() {
-  const c = document.createElement('canvas');
-  drawBadge(c, currentUserData.name, currentUserData.authCode, currentUserData.email);
-  c.toBlob(blob => {
-    triggerDownload(URL.createObjectURL(blob), 'rdx-badge-' + currentUserData.authCode + '.png');
+function downloadPNG(canvas) {
+  canvas.toBlob(blob => {
+    triggerDownload(URL.createObjectURL(blob), 'rdx-cert-' + currentUserData.authCode + '.png');
     showToast('✅ PNG downloaded');
   }, 'image/png');
 }
 
 /* ---- PDF ---- */
-function downloadPDF() {
-  const c = document.createElement('canvas');
-  drawBadge(c, currentUserData.name, currentUserData.authCode, currentUserData.email);
-  const imgData = c.toDataURL('image/png');
+function downloadPDF(canvas) {
+  const imgData = canvas.toDataURL('image/png');
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [600, 360] });
-  pdf.addImage(imgData, 'PNG', 0, 0, 600, 360);
-  pdf.save('rdx-badge-' + currentUserData.authCode + '.pdf');
+  // A4 Landscape size roughly proportional
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [800, 600] });
+  pdf.addImage(imgData, 'PNG', 0, 0, 800, 600);
+  pdf.save('rdx-cert-' + currentUserData.authCode + '.pdf');
   showToast('✅ PDF downloaded');
 }
 
 /* ---- SVG ---- */
 function downloadSVG() {
-  const name = (currentUserData.name || 'RDX Member').slice(0, 26);
+  const name = (currentUserData.name || 'RDX Member');
   const code = currentUserData.authCode;
-  const email = (currentUserData.email || '').slice(0, 44);
+  const email = (currentUserData.email || '');
+  const date = currentUserData.date;
 
-  const svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360" viewBox="0 0 600 360">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0a0e1a"/>
-      <stop offset="100%" stop-color="#111827"/>
-    </linearGradient>
-    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#00e5ff"/>
-      <stop offset="50%" stop-color="#00bcd4"/>
-      <stop offset="100%" stop-color="#00e5ff"/>
-    </linearGradient>
-    <linearGradient id="logo" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#00e5ff"/>
-      <stop offset="100%" stop-color="#008fa8"/>
-    </linearGradient>
-  </defs>
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+    <rect width="800" height="600" fill="#ffffff"/>
+    <rect x="15" y="15" width="770" height="570" fill="none" stroke="#00bcd4" stroke-width="8"/>
+    <rect x="28" y="28" width="744" height="544" fill="none" stroke="#0f1a2b" stroke-width="1.5"/>
+    
+    <!-- Header -->
+    <image href="logo.png" x="360" y="50" width="80" height="80" />
+    <text x="400" y="165" text-anchor="middle" font-family="Times New Roman, serif" font-size="28" font-weight="bold" fill="#0f1a2b">CERTIFICATE OF VERIFIED OWNERSHIP</text>
+    <text x="400" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#00bcd4">OFFICIAL RDX ECOSYSTEM LICENSE</text>
+    
+    <!-- Top Right Meta -->
+    <text x="750" y="60" text-anchor="end" font-family="Courier New, monospace" font-size="11" fill="#64748b">CERTIFICATE ID: ${code}</text>
+    <text x="750" y="75" text-anchor="end" font-family="Courier New, monospace" font-size="11" fill="#64748b">DATE OF ISSUE: ${date}</text>
 
-  <rect width="600" height="360" fill="url(#bg)"/>
-  <rect x="0" y="0" width="600" height="6" fill="url(#bar)"/>
-  <rect x="0" y="354" width="600" height="6" fill="url(#bar)"/>
-  <rect x="10" y="10" width="580" height="340" fill="none" stroke="#00e5ff" stroke-opacity="0.35" stroke-width="1.5"/>
+    <!-- Body Text -->
+    <text x="400" y="230" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#334155">This official document certifies that</text>
+    <text x="400" y="275" text-anchor="middle" font-family="Times New Roman, serif" font-size="36" font-weight="bold" fill="#0f1a2b">${name}</text>
+    <line x1="200" y1="285" x2="600" y2="285" stroke="#cbd5e1" stroke-width="1" />
+    <text x="400" y="315" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#334155">has successfully verified their identity and is an absolute,</text>
+    <text x="400" y="335" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#334155">authorized member of the RDX global network.</text>
+    
+    <text x="400" y="375" text-anchor="middle" font-family="Courier New, monospace" font-size="22" font-weight="bold" fill="#007a8a">rdx.is-a.dev</text>
 
-  <text x="300" y="200" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="160" font-weight="900" fill="#00e5ff" fill-opacity="0.04" transform="rotate(-15 300 180)">RDX</text>
+    <!-- Terms -->
+    <text x="60" y="420" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">TERMS &amp; CONDITIONS:</text>
+    <text x="60" y="435" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">1. This badge is digital proof of association with RDX. It does not grant legal ownership of the domain.</text>
+    <text x="60" y="450" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">2. The Unique ID printed above is strictly linked to the user account. Misuse or forging is prohibited.</text>
+    <text x="60" y="465" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">3. The user agrees to promote the RDX brand positively. The badge must link back to rdx.is-a.dev.</text>
 
-  <circle cx="300" cy="62" r="28" fill="url(#logo)"/>
-  <text x="300" y="69" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="20" font-weight="900" fill="#fff">RDX</text>
+    <!-- Footer -->
+    <image href="sign.png" x="120" y="480" width="140" height="50" />
+    <line x1="100" y1="540" x2="280" y2="540" stroke="#64748b" stroke-width="1" />
+    <text x="190" y="555" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#64748b">AUTHORIZED SIGNATORY</text>
+    
+    <image href="stamp.png" x="540" y="460" width="120" height="120" />
+    <line x1="520" y1="540" x2="700" y2="540" stroke="#64748b" stroke-width="1" />
+    <text x="610" y="555" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#64748b">OFFICIAL SEAL</text>
 
-  <text x="300" y="108" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="18" font-weight="900" fill="#00e5ff">RDX · VERIFIED</text>
-
-  <circle cx="300" cy="145" r="20" fill="#00e5ff" fill-opacity="0.1" stroke="#00e5ff" stroke-width="2.5"/>
-  <polyline points="291,145 297,151 309,138" fill="none" stroke="#00e5ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-
-  <text x="300" y="200" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="20" font-weight="800" fill="#fff">${name}</text>
-  <text x="300" y="217" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" fill="#64748b">${email}</text>
-  <text x="300" y="245" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="700" fill="#64748b">UNIQUE RDX ID</text>
-
-  <rect x="185" y="252" width="230" height="44" rx="8" fill="#00e5ff" fill-opacity="0.08" stroke="#00e5ff" stroke-width="1.5" stroke-dasharray="5,4"/>
-  <text x="300" y="280" text-anchor="middle" font-family="Courier New, monospace" font-size="20" font-weight="800" fill="#00e5ff">${code}</text>
-
-  <text x="300" y="338" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#475569">Verified by RDX · rdx.is-a.dev</text>
-</svg>`;
+    <text x="400" y="580" text-anchor="middle" font-family="Courier New, monospace" font-size="9" fill="#cbd5e1">VERIFIED BY RDX SYSTEM · ${code}</text>
+  </svg>`;
 
   const blob = new Blob([svg], { type: 'image/svg+xml' });
-  triggerDownload(URL.createObjectURL(blob), 'rdx-badge-' + code + '.svg');
+  triggerDownload(URL.createObjectURL(blob), 'rdx-cert-' + code + '.svg');
   showToast('✅ SVG downloaded');
 }
 
@@ -307,66 +377,104 @@ function downloadHTML() {
   const name = (currentUserData.name || 'RDX Member');
   const code = currentUserData.authCode;
   const email = (currentUserData.email || '');
+  const date = currentUserData.date;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Verified by RDX · ${code}</title>
+<title>RDX Certificate - ${code}</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', sans-serif; background: #0a0e1a; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .rdx-floating-badge {
-    position: fixed; bottom: 22px; right: 22px;
-    display: flex; align-items: center; gap: 10px;
-    background: linear-gradient(135deg, #00e5ff, #00bcd4);
-    color: #06202a; padding: 12px 20px; border-radius: 50px;
-    font-weight: 800; font-size: 13px; letter-spacing: 0.5px;
-    text-decoration: none; box-shadow: 0 8px 26px rgba(0,229,255,0.45);
-    z-index: 9999; transition: 0.25s; border: 2px solid rgba(255,255,255,0.3);
+  body { font-family: 'Arial', sans-serif; background: #0a0e1a; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  
+  .rdx-cert {
+    background: #ffffff; width: 100%; max-width: 800px; aspect-ratio: 4/3;
+    border: 8px solid #00bcd4; position: relative; overflow: hidden;
+    padding: 40px; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
   }
-  .rdx-floating-badge:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 14px 34px rgba(0,229,255,0.6); }
-  .rdx-floating-badge .pulse { width: 9px; height: 9px; border-radius: 50%; background: #06202a; animation: rdxPulse 1.6s infinite; }
-  @keyframes rdxPulse { 0% { box-shadow: 0 0 0 0 rgba(6,32,42,0.7); } 70% { box-shadow: 0 0 0 10px rgba(6,32,42,0); } 100% { box-shadow: 0 0 0 0 rgba(6,32,42,0); } }
+  .rdx-cert::before { content: ''; position: absolute; top: 12px; left: 12px; right: 12px; bottom: 12px; border: 1.5px solid #0f1a2b; pointer-events: none; }
+  .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-20deg); font-size: 200px; font-weight: 900; color: rgba(0,188,212,0.04); pointer-events: none; z-index: 0; }
 
-  .rdx-card {
-    background: #111827; border: 1px solid #1e293b; border-radius: 18px;
-    padding: 40px 32px; max-width: 440px; width: 100%; text-align: center;
-    position: relative; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-  }
-  .rdx-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #00e5ff, #00bcd4, #00e5ff); }
-  .rdx-logo { width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #00e5ff, #008fa8); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 18px; margin: 0 auto 12px; box-shadow: 0 6px 18px rgba(0,229,255,0.4); }
-  .rdx-brand { font-size: 22px; font-weight: 900; letter-spacing: 3px; color: #00e5ff; margin-bottom: 4px; }
-  .rdx-title { font-size: 11px; letter-spacing: 3px; color: #94a3b8; text-transform: uppercase; font-weight: 700; margin-bottom: 18px; }
-  .rdx-check { width: 66px; height: 66px; border-radius: 50%; background: rgba(0,229,255,0.1); border: 2px solid #00e5ff; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; color: #00e5ff; font-size: 30px; }
-  .rdx-name { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 4px; }
-  .rdx-email { font-size: 12px; color: #64748b; margin-bottom: 22px; }
-  .rdx-label { font-size: 10px; letter-spacing: 3px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 8px; }
-  .rdx-code { font-family: 'Courier New', monospace; font-size: 20px; font-weight: 800; letter-spacing: 3px; color: #00e5ff; background: rgba(0,229,255,0.07); border: 1.5px dashed #00e5ff; padding: 14px; border-radius: 10px; margin-bottom: 20px; word-break: break-all; }
-  .rdx-footer { font-size: 11px; color: #475569; border-top: 1px solid #1e293b; padding-top: 16px; }
-  .rdx-footer a { color: #00e5ff; text-decoration: none; font-weight: 700; }
+  .cert-header { text-align: center; position: relative; z-index: 1; }
+  .cert-header img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
+  .cert-header h1 { font-family: 'Times New Roman', serif; font-size: 32px; color: #0f1a2b; letter-spacing: 1px; margin-bottom: 5px; }
+  .cert-header h2 { font-size: 14px; color: #00bcd4; letter-spacing: 4px; text-transform: uppercase; }
+
+  .cert-meta { position: absolute; top: 40px; right: 40px; text-align: right; font-family: 'Courier New', monospace; font-size: 12px; color: #64748b; z-index: 1; }
+  .cert-meta b { color: #0f1a2b; }
+
+  .cert-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative; z-index: 1; margin-top: 20px; }
+  .cert-body p { font-size: 16px; color: #334155; margin-bottom: 10px; }
+  .cert-name { font-family: 'Times New Roman', serif; font-size: 38px; font-weight: bold; color: #0f1a2b; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 10px; display: inline-block; }
+  .cert-domain { font-family: 'Courier New', monospace; font-size: 24px; font-weight: bold; color: #007a8a; margin-top: 10px; }
+
+  .cert-terms { font-size: 10px; color: #94a3b8; text-align: left; margin-top: 30px; position: relative; z-index: 1; }
+  .cert-terms b { color: #64748b; display: block; margin-bottom: 4px; }
+
+  .cert-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; position: relative; z-index: 1; padding: 0 20px; }
+  .sign-block { text-align: center; }
+  .sign-block img { height: 50px; margin-bottom: 5px; }
+  .sign-line { width: 180px; height: 1px; background: #64748b; margin-bottom: 6px; }
+  .sign-block span { font-size: 11px; font-weight: bold; color: #64748b; letter-spacing: 1px; }
+
+  .stamp-block { text-align: center; }
+  .stamp-block img { height: 100px; margin-bottom: -10px; object-fit: contain; }
+  .stamp-line { width: 180px; height: 1px; background: #64748b; margin-bottom: 6px; }
+  .stamp-block span { font-size: 11px; font-weight: bold; color: #64748b; letter-spacing: 1px; }
+  
+  .bottom-text { position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; font-family: 'Courier New', monospace; font-size: 10px; color: #cbd5e1; z-index: 1; }
 </style>
 </head>
 <body>
-  <a href="https://rdx.is-a.dev" target="_blank" rel="noopener" class="rdx-floating-badge">
-    <span class="pulse"></span> Verified by RDX
-  </a>
-  <div class="rdx-card">
-    <div class="rdx-logo">R</div>
-    <div class="rdx-brand">RDX</div>
-    <div class="rdx-title">Verified Member</div>
-    <div class="rdx-check">✓</div>
-    <div class="rdx-name">${name}</div>
-    <div class="rdx-email">${email}</div>
-    <div class="rdx-label">Unique RDX ID</div>
-    <div class="rdx-code">${code}</div>
-    <div class="rdx-footer">Verified by <a href="https://rdx.is-a.dev" target="_blank">rdx.is-a.dev</a></div>
+  <div class="rdx-cert">
+    <div class="watermark">RDX</div>
+    
+    <div class="cert-meta">
+      <b>CERTIFICATE ID:</b> ${code}<br>
+      <b>ISSUED ON:</b> ${date}
+    </div>
+
+    <div class="cert-header">
+      <img src="logo.png" alt="RDX Logo">
+      <h1>CERTIFICATE OF VERIFIED OWNERSHIP</h1>
+      <h2>OFFICIAL RDX ECOSYSTEM LICENSE</h2>
+    </div>
+
+    <div class="cert-body">
+      <p>This official document certifies that</p>
+      <div class="cert-name">${name}</div>
+      <p>has successfully verified their identity and is an absolute,<br>authorized member of the RDX global network.</p>
+      <div class="cert-domain">rdx.is-a.dev</div>
+    </div>
+
+    <div class="cert-terms">
+      <b>TERMS &amp; CONDITIONS:</b>
+      1. This badge is digital proof of association with RDX. It does not grant legal ownership of the domain.<br>
+      2. The Unique ID printed above is strictly linked to the user account. Misuse or forging is prohibited.<br>
+      3. The user agrees to promote the RDX brand positively. The badge must link back to rdx.is-a.dev.
+    </div>
+
+    <div class="cert-footer">
+      <div class="sign-block">
+        <img src="sign.png" alt="Signature">
+        <div class="sign-line"></div>
+        <span>AUTHORIZED SIGNATORY</span>
+      </div>
+      <div class="stamp-block">
+        <img src="stamp.png" alt="Stamp">
+        <div class="stamp-line"></div>
+        <span>OFFICIAL SEAL</span>
+      </div>
+    </div>
+    
+    <div class="bottom-text">VERIFIED BY RDX SYSTEM · ${code}</div>
   </div>
 </body>
 </html>`;
 
   const blob = new Blob([html], { type: 'text/html' });
-  triggerDownload(URL.createObjectURL(blob), 'rdx-verified-badge-' + code + '.html');
-  showToast('✅ HTML widget downloaded');
+  triggerDownload(URL.createObjectURL(blob), 'rdx-cert-' + code + '.html');
+  showToast('✅ HTML Certificate downloaded');
 }
