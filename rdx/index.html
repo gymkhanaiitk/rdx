@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Control Panel · RDX</title>
+  <link rel="icon" type="image/png" href="../logo.png">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <nav>
+    <div class="nav-brand">
+      <a href="../index.html" style="display:flex; align-items:center; gap:10px; color:inherit; text-decoration:none;">
+        <img src="../logo.png" alt="RDX Logo" onerror="this.style.display='none'">
+        RDX Admin
+      </a>
+    </div>
+    <div class="nav-actions">
+      <a href="../index.html" class="btn btn-ghost">← Back to Site</a>
+    </div>
+  </nav>
+
+  <section style="padding-top: 100px;">
+    <div class="admin-panel">
+      <h2>⚡ RDX Admin Control Panel</h2>
+      <p style="color:#94a3b8; margin-bottom: 30px;">Welcome, Administrator. View system statistics and manage users.</p>
+      
+      <div class="admin-grid">
+        <div class="admin-stat">
+          <h4>Total Verified Users</h4>
+          <h2 id="adminTotalUsers">0</h2>
+        </div>
+        <div class="admin-stat">
+          <h4>Total Projects</h4>
+          <h2>10</h2>
+        </div>
+        <div class="admin-stat">
+          <h4>System Status</h4>
+          <h2 style="color:#4ade80; font-size: 32px;">Online</h2>
+        </div>
+      </div>
+      
+      <h2 style="margin-top: 50px;">Recent Registrations</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Unique ID</th>
+              <th>Joined Date</th>
+            </tr>
+          </thead>
+          <tbody id="adminUserTable">
+            <tr><td colspan="4" style="text-align: center; color: #64748b;">Loading data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="brand">RDX · rdx.is-a.dev</div>
+    <p style="margin-top: 10px;">© 2026 RDX Ecosystem. Admin Zone.</p>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="../admin.js"></script>
+</body>
+</html>
