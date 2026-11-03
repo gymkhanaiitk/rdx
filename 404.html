@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RDX · Loading...</title>
+  <script>
+    // 404 error aane par URL check karo
+    (function() {
+      var path = window.location.pathname;
+      
+      // Agar URL '/projects' hai, toh '/projects.html' load karo
+      if (path === '/projects') {
+        window.location.replace('/projects.html');
+      } 
+      // Agar URL '/certificate' hai, toh '/certificate.html' load karo
+      else if (path === '/certificate') {
+        window.location.replace('/certificate.html');
+      }
+      // Agar '/rdx' hai, toh '/rdx/index.html' load karo
+      else if (path === '/rdx') {
+        window.location.replace('/rdx/index.html');
+      }
+      // Agar kuch aur galat URL hai, toh Home page pe bhej do
+      else {
+        window.location.replace('/');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <p style="text-align:center; margin-top:50px; font-family:sans-serif; color:#00bcd4;">Redirecting to RDX...</p>
+</body>
+</html>

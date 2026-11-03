@@ -15,7 +15,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 // Admin Email
-const ADMIN_EMAIL = "rdx.hq.in@gmail.com";
+const ADMIN_EMAIL = "info@rdx.mywire.org";
 
 /* ================= HELPERS ================= */
 let base64Cache = { sign: null, stamp: null };
@@ -176,7 +176,7 @@ appEl.innerHTML = `
         <div class="contact-icon">📧</div>
         <h3>Website Development Inquiry</h3>
         <p>For custom websites, portfolios, e-commerce stores, or any web development work, drop us an email.</p>
-        <a href="mailto:rdx.hq.in@gmail.com" class="btn btn-primary contact-email">rdx.hq.in@gmail.com</a>
+        <a href="mailto:info@rdx.mywire.org" class="btn btn-primary contact-email">info@rdx.mywire.org</a>
       </div>
     </section>
   </div>
@@ -406,7 +406,7 @@ async function drawBadge(canvas, name, code, email, date) {
   ctx.fillText('rdx.is-a.dev', W/2, 375);
 
   ctx.textAlign = 'center'; ctx.fillStyle = '#00bcd4'; ctx.font = 'bold 12px Arial, sans-serif';
-  ctx.fillText('Contact for web development: rdx.hq.in@gmail.com', W/2, 410);
+  ctx.fillText('Contact for web development: info@rdx.mywire.org', W/2, 410);
 
   ctx.textAlign = 'left'; ctx.fillStyle = '#94a3b8'; ctx.font = '10px Arial, sans-serif';
   ctx.fillText('TERMS & CONDITIONS:', 60, 435);
@@ -501,7 +501,7 @@ function downloadSVG() {
     <text x="400" y="315" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#334155">has successfully verified their identity and is an absolute,</text>
     <text x="400" y="335" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#334155">authorized member of the RDX global network.</text>
     <text x="400" y="375" text-anchor="middle" font-family="Courier New, monospace" font-size="22" font-weight="bold" fill="#007a8a">rdx.is-a.dev</text>
-    <text x="400" y="410" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#00bcd4">Contact for web development: rdx.hq.in@gmail.com</text>
+    <text x="400" y="410" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#00bcd4">Contact for web development: info@rdx.mywire.org</text>
     <text x="60" y="435" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">TERMS &amp; CONDITIONS:</text>
     <text x="60" y="450" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">1. This badge is digital proof of association with RDX. It does not grant legal ownership of the domain.</text>
     <text x="60" y="465" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">2. The Unique ID printed above is strictly linked to the user account. Misuse or forging is prohibited.</text>
@@ -571,7 +571,7 @@ function downloadHTML() {
       <div class="cert-name">${name}</div>
       <p>has successfully verified their identity and is an absolute,<br>authorized member of the RDX global network.</p>
       <div class="cert-domain">rdx.is-a.dev</div>
-      <div class="cert-contact">Contact for web development: rdx.hq.in@gmail.com</div>
+      <div class="cert-contact">Contact for web development: info@rdx.mywire.org</div>
     </div>
     <div class="cert-terms">
       <b>TERMS &amp; CONDITIONS:</b>

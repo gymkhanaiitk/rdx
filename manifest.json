@@ -1,0 +1,22 @@
+{
+  "name": "RDX · Official Digital Ecosystem",
+  "short_name": "RDX",
+  "description": "Get verified by RDX. Download your cryptographic ownership badge.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0e1a",
+  "theme_color": "#00e5ff",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
